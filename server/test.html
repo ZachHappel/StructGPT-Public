@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test API</title>
+    <script>
+        function getPresetNames() {
+            fetch(`/api/list/presets`)
+                .then(response => response.text())
+                .then(data => alert('Response from server: ' + data))
+                .catch(error => console.error('Error:', error));
+        }
+    </script>
+
+    <script>
+        function makeApiRequest() {
+            const textBoxValue = document.getElementById('input-text').value;
+            fetch(`/api/file?content=${encodeURIComponent(textBoxValue)}`)
+                .then(response => response.text())
+                .then(data => alert('Response from server: ' + data))
+                .catch(error => console.error('Error:', error));
+        }
+    </script>
+
+    <script>
+        function getPreset() {
+            const textBoxValue = document.getElementById('input-preset-text').value;
+            fetch(`/api/preset-file?content=${encodeURIComponent(textBoxValue)}`)
+                .then(response => response.text())
+                .then(data => alert('Response from server: ' + data))
+                .catch(error => console.error('Error:', error));
+        }
+    </script>
+
+<script>
+    function sendPostRequest() {
+        const instructName = document.getElementById('post-title-text').value;
+        const instructions = document.getElementById('post-instruction-text').value;
+        fetch('/api/file', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ title: instructName, instructions: instructions })
+        })
+        .then(response => response.json())
+        .then(data => alert('Response from server: ' + data.message))
+        .catch(error => console.error('Error:', error));
+    }
+</script>
+
+</head>
+<body>
+    <input type="text" id="input-text" placeholder="Enter text here">
+    <button onclick="makeApiRequest()">Send to API</button>
+    <button onclick="getPresetNames()">Get Preset Names</button>
+    <br/>
+    <br/>
+    <input type="text" id="input-preset-text" placeholder="Enter preset name">
+    <button onclick="getPreset()">Enter Preset Name</button>
+    <br/>
+    <br/>
+    <body>
+        <input type="text" id="post-title-text" placeholder="Enter instruction title">
+        <input type="text" id="post-instruction-text" placeholder="Enter instructions">
+        <button onclick="sendPostRequest()">Send POST Request</button>
+    </body>
+</body>

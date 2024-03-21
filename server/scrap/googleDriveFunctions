@@ -1,0 +1,87 @@
+async function getFile(name, cb) {
+    const params = {pageSize: 3};
+    params.q = "name contains '"+ name + "'"; 
+    const res = await drive.files.list(params);
+    console.log(res.data);
+    cb(res.data);
+}
+
+async function downloadFile (fileId) {
+    drive.files
+    .get({fileId, alt: 'media'}, {responseType: 'stream'})
+    .then(res => {
+      return new Promise((resolve, reject) => {
+        const filePath = path.join(os.tmpdir(), "testing.txt");
+        console.log(`writing to ${filePath}`);
+        const dest = fs.createWriteStream(filePath);
+        let progress = 0;
+
+        res.data
+          .on('end', () => {
+            console.log('Done downloading file.');
+            resolve(filePath);
+          })
+          .on('error', err => {
+            console.error('Error downloading file.');
+            reject(err);
+          })
+          .on('data', d => {
+            progress += d.length;
+            if (process.stdout.isTTY) {
+              process.stdout.clearLine();
+              process.stdout.cursorTo(0);
+              process.stdout.write(`Downloaded ${progress} bytes`);
+            }
+          })
+          .pipe(dest);
+      });
+    });
+}
+
+async function getFilesInFolder(folderName) {
+    const params = {pageSize: 3};
+    params.q = "'"+folderName+"' in parents";
+    const res = await drive.files.list(params);
+    console.log(res.data);
+    
+
+}
+
+
+async function testing() {
+    const query  = "name contains 'testing'";
+    
+    const auth = await authenticate({
+        keyfilePath: path.join(__dirname, '../oauth.json'),
+        scopes: 'https://www.googleapis.com/auth/drive.metadata.readonly',
+    
+      });
+    google.options({auth});
+
+    const params = {pageSize: 3};
+    params.q = query; 
+    const res = await drive.files.list(params);
+    console.log(res.data);
+
+}
+
+async function startGoogle() {
+
+    const oAuth2Client = new google.auth.OAuth2(
+        "", "", ["http://localhost:3000/oauth2callback"]);
+
+    const authUrl = await oAuth2Client.generateAuthUrl({
+        scope: 'https://www.googleapis.com/auth/drive',
+    });
+
+    console.log(authUrl);
+    /**
+    const auth = await authenticate({
+        keyfilePath: path.join(__dirname, '../oauth.json'),
+        scopes: 'https://www.googleapis.com/auth/drive',
+    
+      });
+    **/
+    google.options({oAuth2Client});
+
+}

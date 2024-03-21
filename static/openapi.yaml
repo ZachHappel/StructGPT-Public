@@ -1,0 +1,51 @@
+openapi: 3.0.0
+info:
+  title: Sample API
+  description: This is a sample server.
+  version: "1.0.0"
+
+servers:
+  - url: https://69.4.234.87
+
+paths:
+  /api:
+    post:
+      summary: Sample POST Request
+      operationId: postSampleData
+      description: This endpoint processes data for the sample API.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sampleProperty:
+                  type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Request processed successfully."
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "Invalid request data."

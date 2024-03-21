@@ -1,0 +1,229 @@
+const fs = require('fs');
+
+const os = require('os');
+const path = require('path');
+const uuid = require('uuid');
+const https = require('https');
+
+const express = require("express");
+const {google} = require('googleapis');
+
+const { initializeApp, applicationDefault, cert } = require('firebase-admin/app');
+const { getFirestore, Timestamp, FieldValue, Filter } = require('firebase-admin/firestore');
+
+const docs = require('@googleapis/docs')
+const {authenticate} = require('@google-cloud/local-auth');
+const PORT = process.env.PORT || 3000;
+
+const app = express();
+app.use(express.static(path.join(__dirname, 'public')));
+
+const drive = google.drive('v3');
+
+const sslOptions = {
+    key: fs.readFileSync(path.join(__dirname, 'server.key')),
+    cert: fs.readFileSync(path.join(__dirname, 'server.cert'))
+  };
+
+
+//gs://structgpt.appspot.com
+const serviceAccount = require(path.join(__dirname, '../firebase-service-account.json'));
+var admin = require("firebase-admin");
+
+initializeApp({
+    credential: cert(serviceAccount),
+    storageBucket: "structgpt.appspot.com"
+});
+
+var bucket = admin.storage().bucket();
+var filename = path.join(__dirname, '../testing.txt');
+
+
+const db = getFirestore();
+
+/** fData = {
+            name: fileName,
+            id: metadata.id,
+            selfLink: metadata.selfLink, 
+            mediaLink: metadata.mediaLink, 
+            contentType: metadata.contentType,
+            size: metadata.size, 
+        } 
+
+//console.log("\n\n\nResults[0]: " + JSON.stringify(results[0]));
+        //console.log("\n\n\nResults[0][0]: " + JSON.stringify(results[0][0]));
+
+        //console.log("Results: " + results[0][0]);
+        
+
+*/
+async function getFile(fileName) {
+
+    let fileData = await bucket.getFiles({prefix: fileName})
+    
+    .then(results => {
+        if (results.length !== 1) { return {} }
+        //console.log("getFile File Data: " + JSON.stringify(results[0][0].metadata));
+        return results; 
+    
+    //Error response, unable to find file
+    }).catch(err => {
+        console.log("Error occurred: " + err);
+        return {};
+    });
+
+    return fileData;
+}
+
+async function uploadFile() {
+
+    const metadata = {
+      metadata: {
+        // This line is very important. It's to create a download token.
+        firebaseStorageDownloadTokens: uuid.v4()
+      },
+      contentType: 'text/plain',
+      cacheControl: 'public, max-age=31536000',
+    };
+  
+    // Uploads a local file to the bucket
+    await bucket.upload(filename, {
+      // Support for HTTP requests made with `Accept-Encoding: gzip`
+      gzip: true,
+      metadata: metadata,
+    });
+  
+  console.log(`${filename} uploaded.`);
+  
+}
+
+async function downloadFile(fileData) {
+
+}
+
+async function searchForFile() {
+    const snapshot = await db.collection('users').get();
+}
+  
+  //uploadFile().catch(console.error);
+
+
+
+
+
+
+
+/* --------------------------------------- */ 
+
+app.post("/api/test", (req, res) => {
+  console.log("req: " + req);
+    res.json({ message: "Hello from server!" });
+});
+
+app.get("/api/test", (req, res) => {
+  console.log("req: " + req);
+    res.json({ message: "Hello from server!" });
+});
+  
+
+app.get("/api/file", async (req, res) => {
+    
+    const content = req.query.content;
+    console.log("Request Query Content: " + content);
+    
+    await getFile(content)
+        
+        .then( async (fileData) => {
+            
+            if (fileData.length !== 1) { res.status(400).send("Bad request."); return; }
+
+            console.log("File data obtained, file ID: " + fileData[0][0].metadata.id);
+            
+            try {
+                await fileData[0].download({destination: path.join(__dirname, '../downloaded') }).then(downloadResponse => {
+                    console.log("Download success: " + downloadResponse);
+                    res.json({ message: `Received content: ${content}` });
+                });  
+            } catch (err) {
+                console.log("Downloading Error Occurred - " + err);
+                res.status(400).send("Error downloading file from storage.")
+            }
+            
+            
+        });
+    
+
+    
+    
+    
+
+});
+    
+
+
+
+app.get("/", (req, res) => {
+    res.send("Hello world!")
+    //console.log("req: " + req);
+     // res.json({ message: "Hello from server!" });
+});
+
+app.get('/cat/openapi.yaml', function (req, res, next) {
+    //res.render('openapi.yaml');
+})
+ 
+app.get('/test', (req, res) => {
+    res.sendFile(__dirname + '/test.html'); // Assuming this file is named 'test.html'
+  });
+
+
+app.listen(PORT, () => {
+    console.log(`Example app listening on port ${PORT}`)
+})
+
+
+  /**
+https.createServer(sslOptions, app).listen(PORT, () => {
+    console.log(`HTTPS Server listening on ${PORT}`);
+    console.log(path.join(__dirname, '../service-account.json'));
+    
+    // ... rest of your startup code
+});
+
+**/
+
+
+ /**
+https.createServer(sslOptions, app).listen(PORT, () => {    
+  console.log(`Server listening on ${PORT}`);)}
+ 
+  startGoogle()
+    .then( async ()=>{
+        await getFile("testing", async (res) => {
+            const fileId = res.files[0].id;
+            downloadFile(fileId);
+        });
+        
+    })
+    .then({
+        
+    })
+    .catch(console.error);
+
+});**/
+
+
+/**
+ * startGoogle()
+    .then( async ()=>{
+        await getFile("testing", async (res) => {
+            const fileId = res.files[0].id;
+            downloadFile(fileId);
+        });
+        
+    })
+    .then({
+        
+    })
+    .catch(console.error);
+ */

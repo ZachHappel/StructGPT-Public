@@ -1,0 +1,101 @@
+openapi: 3.0.0
+info:
+  title: Custom Instructions Service
+  version: 1.0.0
+  description: A service for storing and retrieving instruction sets.
+servers:
+  - url: https://wellmadestarchylevel.replit.app
+
+paths:
+  /api/file:
+    post:
+      summary: Add an Instruction Set
+      description: Adds an instruction set to storage, using both a file name and file contents within the post body.
+      operationId: addInstructionSet
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: Title of the instruction set.
+                instructions:
+                  type: string
+                  description: Contents of the instruction set.
+      responses:
+        '200':
+          description: Instruction set added successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: File example.txt created and uploaded successfully.
+
+    get:
+      summary: Retrieve an Instruction
+      description: Retrieves an instruction from storage using a specified filename provided by the user, txt file response.
+      operationId: retrieveInstruction
+      parameters:
+        - in: query
+          name: content
+          schema:
+            type: string
+            description: The filename of the instruction set to retrieve.
+          required: true
+      responses:
+        '200':
+          description: Instruction set retrieved successfully.
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Contents of the instruction set.
+
+  /api/preset-file:
+    get:
+      summary: Retrieve a Preset of Custom Instructions
+      description: Retrieves a preset of custom instructions from storage, txt file response.
+      operationId: retrievePresetInstruction
+      parameters:
+        - in: query
+          name: content
+          schema:
+            type: string
+            description: The name of the preset instruction set to retrieve.
+          required: true
+      responses:
+        '200':
+          description: Preset instruction set retrieved successfully.
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Contents of the preset instruction set.
+
+  /api/list/presets:
+    get:
+      summary: List of Presets
+      description: Retrieves an array of stored preset custom instructions available for use.
+      operationId: listPresets
+      responses:
+        '200':
+          description: List of presets retrieved successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Received request for preset names = successful
+                  presets:
+                    type: array
+                    items:
+                      type: string
+                      example: Preset1.txt
